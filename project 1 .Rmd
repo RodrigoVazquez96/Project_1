@@ -1,0 +1,187 @@
+---
+title: "Untitled"
+author: "Rodrigo Vazquez"
+date: "10/18/2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+load(file="providerspokane.rda") 
+```
+
+```{r}
+setwd("~/Desktop/GitHubRepository/project1")
+load("providerspokane.rda")
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+colnames(providerspokane)
+names(providerspokane)[6]="Gender"
+names(providerspokane)
+names(providerspokane)[20]="numServices"
+names(providerspokane)[14]="providerType"
+names(providerspokane)[1]="id"
+names(providerspokane)[16]="servicePlace"
+```
+
+```{r}
+colnames(providerspokane)
+```
+
+
+```{r}
+colnames(providerspokane)
+```
+
+## Question 1: Are there differences in the number of services, distinct beneficiary per day services, average medicare allowed, charged, and paid amount, and medicare standardized amount differ as a function of Gender, the Provider Type, and Place of Service.
+
+##Create New Dataset for Gender
+```{r}
+Genderstudy=providerspokane %>% select(Gender, Number.of.Distinct.Medicare.Beneficiary.Per.Day.Services, Average.Medicare.Allowed.Amount, Average.Submitted.Charge.Amount, numServices, Average.Medicare.Standardized.Amount, Average.Medicare.Payment.Amount)
+```
+
+##Create New Dataset for Provider.Type
+```{r}
+ProviderType=providerspokane %>% select(providerType, Number.of.Distinct.Medicare.Beneficiary.Per.Day.Services, Average.Medicare.Allowed.Amount, Average.Submitted.Charge.Amount, numServices, Average.Medicare.Standardized.Amount, Average.Medicare.Payment.Amount)
+```
+
+##Create New Dataset for Place.of.Service
+```{r}
+PlaceService=providerspokane %>% select(servicePlace, Number.of.Distinct.Medicare.Beneficiary.Per.Day.Services, Average.Medicare.Allowed.Amount, Average.Submitted.Charge.Amount, numServices, Average.Medicare.Standardized.Amount, Average.Medicare.Payment.Amount)
+```
+
+## Medicare Varibales as a Function of Place of Service: 
+
+```{r}
+servicePlace.mean=providerspokane%>%group_by(servicePlace)%>%summarize(numberofservices=mean(numServices),numberofdistinctmedicarebeneficiaryperdayservices=mean(Number.of.Distinct.Medicare.Beneficiary.Per.Day.Services),averagemedicareallowed=mean(Average.Medicare.Allowed.Amount),averagemedicarecharged=mean(Average.Submitted.Charge.Amount),averagemedicarepayment=mean(Average.Medicare.Payment.Amount),averagemedicarestandarizedamount=mean(Average.Medicare.Standardized.Amount))
+```
+
+```{r}
+servicePlace.mean.filter=filter(servicePlace.mean, numberofservices<1000)
+```
+
+```{r}
+Servicemeanfiltergather=gather(servicePlace.mean.filter, "Service", "mean", c(2, 3, 4, 5, 6, 7))
+```
+
+```{r}
+ggplot(Servicemeanfiltergather,aes(servicePlace,mean))+geom_bar(stat="identity", fill=67)+ facet_wrap(~Service, scale = "free_y")
+```
+
+###Analysis of Place of Service
+These graph about place of service, you can see a trend illustrating the differences between facilities and offices. You can see that facilities (represented by "F") such as hospitals charge more but provide less services, wheres with the offices (represented by "O") charge less for what they do and actually provide more services.
+
+
+## Medicare Varaibles as a Function of Gender 
+
+```{r}
+gender.mean=providerspokane%>%group_by(Gender)%>%summarize(numberofservices=mean(numServices),numberofdistinctmedicarebeneficiaryperdayservices=mean(Number.of.Distinct.Medicare.Beneficiary.Per.Day.Services),averagemedicareallowed=mean(Average.Medicare.Allowed.Amount),averagemedicarecharged=mean(Average.Submitted.Charge.Amount),averagemedicarepayment=mean(Average.Medicare.Payment.Amount),averagemedicarestandarizedamount=mean(Average.Medicare.Standardized.Amount))
+```
+ 
+```{r}
+gender.mean.filter=filter(gender.mean, numberofservices<1000)
+```
+ 
+```{r}
+gendermeanfiltergather=gather(gender.mean.filter, "Service", "mean", c(2, 3, 4, 5, 6, 7))
+```
+ 
+```{r}
+ggplot(gendermeanfiltergather,aes(Gender,mean))+geom_bar(stat="identity", fill=67)+ facet_wrap(~Service, scale = "free_y")
+```
+
+###Analysis of Gender
+In these set of graphs created to analyze the implications of gender we notice a trend similar to that of place of service. With place of service there was a higher cost but less services provided when it came to facilites and a lower cost but higher number of services with offices. Here with gender we see a similar pattern in that men are like that of the facilities in that they charge more but provide less services while women are like that of the offices in that they charge less but provide more. 
+
+
+## Medicare Variables as a Funciton of Type of Provider
+
+## Average Medicare Standardized Amount as a function of Type of Provider 
+
+```{r}
+typeofprovider=providerspokane%>%group_by(providerType)%>%summarize(StandardAmmount=mean(Average.Medicare.Standardized.Amount))
+typeofprovider <- typeofprovider[order(-typeofprovider$StandardAmmount),]
+typeofprovider <- typeofprovider[1:20,]
+typeofprovider
+```
+ 
+```{r}
+ggplot(typeofprovider,aes(reorder(providerType,StandardAmmount),StandardAmmount,fill="StandardAmmount"))+geom_bar(stat="identity")+coord_flip()+ylab("Average Medicare Standard Amount")+xlab("Provider Type")
+```
+
+
+## Average Medicare Charge as a function of Type of Provider 
+
+```{r}
+typeofprovider=providerspokane%>%group_by(providerType)%>%summarize(ChargeAmount=mean(Average.Submitted.Charge.Amount))
+typeofprovider <- typeofprovider[order(-typeofprovider$ChargeAmount),]
+typeofprovider <- typeofprovider[1:20,]
+```
+
+```{r}
+ggplot(typeofprovider,aes(reorder(providerType,ChargeAmount),ChargeAmount,fill=ChargeAmount))+geom_bar(stat="identity")+coord_flip()+ylab("Average Submitted Charge Amount")+xlab("Provider Type")
+```
+
+## Average Medicare Payment Amount as a function of Type of Provider
+
+```{r}
+typeofprovider=providerspokane%>%group_by(providerType)%>%summarize(PaymentAmount=mean(Average.Medicare.Payment.Amount))
+typeofprovider <- typeofprovider[order(-typeofprovider$PaymentAmount),]
+typeofprovider <- typeofprovider[1:20,]
+```
+
+```{r}
+ggplot(typeofprovider,aes(reorder(providerType,PaymentAmount),PaymentAmount,fill=PaymentAmount))+geom_bar(stat="identity")+coord_flip()+ylab("Average Medicare Payment Amount")+xlab("Provider Type")
+```
+
+
+## Average Medicare Allowed Amount as a function of Type of Provider
+
+```{r}
+typeofprovider=providerspokane%>%group_by(providerType)%>%summarize(AllowedAmount=mean(Average.Medicare.Allowed.Amount))
+typeofprovider <- typeofprovider[order(-typeofprovider$AllowedAmount),]
+typeofprovider <- typeofprovider[1:20,]
+```
+
+```{r}
+ggplot(typeofprovider,aes(reorder(providerType,AllowedAmount),AllowedAmount,fill=AllowedAmount))+geom_bar(stat="identity")+coord_flip()+ylab("Average Medicare Allowed Amount")+xlab("Provider Type")
+```
+
+
+## Number of Services as a Function of Type of Provider 
+
+```{r}
+typeofprovider=providerspokane%>%group_by(providerType)%>%summarize(NumberServices=mean(numServices))
+typeofprovider <- typeofprovider[order(-typeofprovider$NumberServices),]
+typeofprovider <- typeofprovider[1:20,]
+```
+
+```{r}
+ggplot(typeofprovider,aes(reorder(providerType,NumberServices),NumberServices,fill=NumberServices))+geom_bar(stat="identity")+coord_flip()+ylab("Number of Services")+xlab("Provider Type")
+```
+
+
+## Distinct Beneficiaries Per Day Services as a Function of Type of Provider
+
+```{r}
+typeofprovider=providerspokane%>%group_by(providerType)%>%summarize(Beneficiaries=mean(Number.of.Medicare.Beneficiaries))
+typeofprovider <- typeofprovider[order(-typeofprovider$Beneficiaries),]
+typeofprovider <- typeofprovider[1:20,]
+```
+
+```{r}
+ggplot(typeofprovider,aes(reorder(providerType,Beneficiaries),Beneficiaries,fill=Beneficiaries))+geom_bar(stat="identity")+coord_flip()+ylab("Distinct Beneficiaries Per Day Services")+xlab("Provider Type")
+```
+
+###Analysis
+
+The top three provider types are ambulatory surgical center, ambulance service provider, and cardiac surgery. The bottom three types of the top 20 are anesthesiology, gastroenterology, and surgical oncology. The average medicare allowed amount is between 600 and 1200 for the top three providers and less than 300 for the bottom three. The trend that is continuously seen is the top three providers having significantly higher numbers in every category across the board, with all the other providers relatively close in medicare average numbers. However, the number of services for ambulance service supplier exceeds every other provider type with over 15000 where clinical laboratory is next with less than 3000. Mammographic Screening Center, clinical laboratory and ambulance service supplier all have the highest number of distinct beneficiaries per day services. The standardized amount and average payment amount are about the same for the top three providers between 300 and 800 significantly higher than the other providers who are mostly less than 250. All this data is telling us is that other than some slight variation, ambulance services tends to be the largest and most active provider type of medicare beneficiaries.
